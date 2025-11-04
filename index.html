@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Deriv Pattern Bot - Dynamic Pattern with Martingale</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>🎯 Deriv Pattern Bot (Dynamic Pattern + Martingale)</h1>
+
+      <!-- 🔑 API Connection -->
+      <div class="section">
+        <label>API Token:</label>
+        <input
+          type="password"
+          id="apiToken"
+          placeholder="Enter your Deriv API Token"
+        />
+        <button id="connectBtn">Connect</button>
+        <div id="statusMessage" class="status"></div>
+      </div>
+
+      <!-- 👤 Account Info -->
+      <div id="accountInfo" class="section hidden">
+        <h2>Account Info</h2>
+        <p><strong>Login ID:</strong> <span id="loginId">-</span></p>
+        <p><strong>Balance:</strong> <span id="balance">0.00</span></p>
+        <p><strong>Currency:</strong> <span id="currency">-</span></p>
+      </div>
+
+      <!-- 🌍 Market Selection -->
+      <div id="marketSection" class="section hidden">
+        <h2>🌍 Market Selection</h2>
+        <label for="marketSelect">Select Market:</label>
+        <select id="marketSelect">
+          <!-- Synthetic Indices - 1 Second Tick -->
+          <optgroup label="Synthetic Indices (1 Second)">
+            <option value="1HZ10V" data-display="Volatility 10 Index (1s)">
+              Volatility 10 Index (1s)
+            </option>
+            <option value="1HZ15V" data-display="Volatility 10 Index (1s)">
+              Volatility 15 Index (1s)
+            </option>
+            <option value="1HZ25V" data-display="Volatility 10 Index (1s)">
+              Volatility 25 Index (1s)
+            </option>
+            <option value="1HZ30V" data-display="Volatility 10 Index (1s)">
+              Volatility 30 Index (1s)
+            </option>
+            <option value="1HZ25V" data-display="Volatility 25 Index (1s)">
+              Volatility 25 Index (1s)
+            </option>
+            <option value="1HZ50V" data-display="Volatility 50 Index (1s)">
+              Volatility 50 Index (1s)
+            </option>
+            <option value="1HZ75V" data-display="Volatility 75 Index (1s)">
+              Volatility 75 Index (1s)
+            </option>
+            <option value="1HZ90V" data-display="Volatility 75 Index (1s)">
+              Volatility 90 Index (1s)
+            </option>
+            <option value="1HZ100V" data-display="Volatility 100 Index (1s)">
+              Volatility 100 Index (1s)
+            </option>
+          </optgroup>
+
+          <!-- ⚡ Synthetic Indices (Standard) -->
+          <optgroup label="Synthetic Indices (Standard)">
+            <option value="R_10" data-display="Volatility 10 Index">
+              Volatility 10 Index
+            </option>
+            <option value="R_25" data-display="Volatility 25 Index">
+              Volatility 25 Index
+            </option>
+            <option value="R_50" data-display="Volatility 50 Index">
+              Volatility 50 Index
+            </option>
+            <option value="R_75" data-display="Volatility 75 Index">
+              Volatility 75 Index
+            </option>
+            <option value="R_100" data-display="Volatility 100 Index">
+              Volatility 100 Index
+            </option>
+          </optgroup>
+
+          <!-- 💥 Crash/Boom Indices - 1 Second Tick -->
+          <optgroup label="Crash/Boom (1 Second)">
+            <option value="BOOM1000" data-display="Boom 1000 Index">
+              Boom 1000 Index
+            </option>
+            <option value="BOOM500" data-display="Boom 500 Index">
+              Boom 500 Index
+            </option>
+            <option value="CRASH1000" data-display="Crash 1000 Index">
+              Crash 1000 Index
+            </option>
+            <option value="CRASH500" data-display="Crash 500 Index">
+              Crash 500 Index
+            </option>
+          </optgroup>
+
+          <!-- 🧩 Step Indices -->
+          <optgroup label="Step Indices">
+            <option value="stpRNG" data-display="Step Index">Step Index</option>
+          </optgroup>
+
+          <!-- 🚀 Jump Indices -->
+          <optgroup label="Jump Indices">
+            <option value="JD10" data-display="Jump 10 Index">
+              Jump 10 Index
+            </option>
+            <option value="JD25" data-display="Jump 25 Index">
+              Jump 25 Index
+            </option>
+            <option value="JD50" data-display="Jump 50 Index">
+              Jump 50 Index
+            </option>
+            <option value="JD75" data-display="Jump 75 Index">
+              Jump 75 Index
+            </option>
+            <option value="JD100" data-display="Jump 100 Index">
+              Jump 100 Index
+            </option>
+          </optgroup>
+
+          <!-- 📉 Range Break Indices -->
+          <optgroup label="Range Break Indices">
+            <option value="RDBEAR" data-display="Bear Market Index">
+              Bear Market Index
+            </option>
+            <option value="RDBULL" data-display="Bull Market Index">
+              Bull Market Index
+            </option>
+          </optgroup>
+        </select>
+
+        <p>
+          <strong>Current Market:</strong>
+          <span id="selectedMarketDisplay">Volatility 100 Index</span>
+        </p>
+      </div>
+
+      <!-- ⚙️ Dynamic Pattern Setup -->
+      <div id="patternSetup" class="section pattern-setup hidden">
+        <h2>🧩 Set Custom Pattern</h2>
+        <p>
+          Select pattern length, click boxes to toggle EVEN/ODD, choose trade
+          type, and press "Save Pattern".
+        </p>
+
+        <!-- Pattern Length Selector -->
+        <div class="pattern-length-selector">
+          <label for="patternLength">Pattern Length:</label>
+          <select id="patternLength">
+            <option value="3">3 Digits</option>
+            <option value="4">4 Digits</option>
+            <option value="5" selected>5 Digits</option>
+            <option value="6">6 Digits</option>
+            <option value="7">7 Digits</option>
+            <option value="8">8 Digits</option>
+            <option value="9">9 Digits</option>
+            <option value="10">10 Digits</option>
+          </select>
+        </div>
+
+        <div id="patternBoxes" class="pattern-boxes">
+          <!-- Boxes will be generated dynamically -->
+        </div>
+
+        <div class="pattern-controls">
+          <div class="control-group">
+            <label for="tradeType">Trade on Match:</label>
+            <select id="tradeType">
+              <option value="DIGITODD">ODD</option>
+              <option value="DIGITEVEN">EVEN</option>
+            </select>
+          </div>
+
+          <div class="button-group">
+            <button id="savePatternBtn" class="btn save">Save Pattern</button>
+            <button id="resetPatternBtn" class="btn reset">Reset</button>
+          </div>
+        </div>
+
+        <div id="savedPatternDisplay" class="saved-pattern"></div>
+      </div>
+
+      <!-- 💹 Trading Section -->
+      <div id="tradingSection" class="section hidden">
+        <h2>📈 Trading Panel</h2>
+
+        <label>Base Stake Amount (min 0.35):</label>
+        <input
+          type="number"
+          id="stakeAmount"
+          value="0.35"
+          step="0.01"
+          min="0.35"
+        />
+
+        <!-- 🎲 Martingale Section -->
+        <div class="martingale-section section">
+          <div class="toggle-container">
+            <label class="toggle-switch">
+              <input type="checkbox" id="martingaleToggle" />
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-label">Enable Martingale</span>
+          </div>
+
+          <div id="martingaleControls" class="martingale-disabled">
+            <div class="info-hint">
+              💡 Martingale multiplies your stake after each loss to recover
+              losses with a single win.
+            </div>
+
+            <div class="martingale-controls">
+              <div class="control-group">
+                <label for="martingaleMultiplier"
+                  >Multiplier (1.1x - 10x)</label
+                >
+                <input
+                  type="number"
+                  id="martingaleMultiplier"
+                  value="2"
+                  step="0.1"
+                  min="1.1"
+                  max="10"
+                />
+              </div>
+
+              <div class="control-group">
+                <label for="martingaleMaxSteps">Max Steps (1-10)</label>
+                <input
+                  type="number"
+                  id="martingaleMaxSteps"
+                  value="5"
+                  min="1"
+                  max="10"
+                />
+              </div>
+            </div>
+
+            <div class="warning-hint">
+              ⚠️ Warning: Martingale can lead to rapid capital loss. Use with
+              caution!
+            </div>
+
+            <!-- Stake Progression Preview -->
+            <div class="martingale-preview">
+              <div class="preview-title">📊 Stake Progression Preview</div>
+              <div id="progressionList" class="progression-list"></div>
+            </div>
+
+            <!-- Total Risk Calculator -->
+            <div class="risk-calculator">
+              <div class="risk-label">Total Risk (All Steps)</div>
+              <div id="totalRisk" class="risk-amount">0.00 USD</div>
+            </div>
+          </div>
+
+          <!-- Current Stake Display -->
+          <div class="current-stake-display">
+            <div class="current-stake-label">Current Stake</div>
+            <div id="currentStakeValue" class="current-stake-value">
+              0.35 USD
+            </div>
+            <div id="martingaleStepInfo" class="martingale-step-info">
+              Step 0 of 0
+            </div>
+          </div>
+        </div>
+
+        <div class="trade-buttons">
+          <button id="startBotBtn">Start Bot</button>
+          <button id="stopBotBtn" disabled>Stop Bot</button>
+        </div>
+
+        <div id="botStatus" class="bot-status">
+          <div id="botStatusText">Bot Stopped</div>
+          <div id="botInfo">Start the bot to begin pattern observation</div>
+        </div>
+
+        <div class="pattern-monitor">
+          <h3>Pattern Observation</h3>
+          <div id="patternDisplay" class="digit-history">
+            <!-- Observation boxes will be generated dynamically -->
+          </div>
+          <div id="patternStatus" class="pattern-status waiting">
+            Waiting for pattern observation...
+          </div>
+        </div>
+
+        <div class="price-section">
+          <h3>Live Tick</h3>
+          <div id="priceDigits" class="price">--</div>
+          <div>Last Digit: <span id="lastDigitLabel">-</span></div>
+        </div>
+
+        <div class="stats">
+          <h3>Performance Stats</h3>
+          <p>Total Trades: <span id="totalTrades">0</span></p>
+          <p>Wins: <span id="totalWins">0</span></p>
+          <p>Losses: <span id="totalLosses">0</span></p>
+          <p>Win Rate: <span id="winRate">0%</span></p>
+        </div>
+
+        <div class="trade-history">
+          <h3>Trade History</h3>
+          <div id="historyList"></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
